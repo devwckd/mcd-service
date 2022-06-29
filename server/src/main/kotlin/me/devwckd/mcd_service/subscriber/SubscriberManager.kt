@@ -16,7 +16,18 @@ class SubscriberManager {
 
     suspend fun broadcast(event: Event) {
         subscribers.filter {
-            it.regex.matches(event::class.simpleName!!.also(::println))
+            it.regex.matches(event::class.simpleName!!)
+        }.forEach {
+            it.session.sendSerialized(event)
+        }
+    }
+    suspend fun sendToId(id: String, event: Event) {
+        subscribers.filter {
+            println("${it.id} == $id")
+            it.id == id
+        }.filter {
+            println("${it.regex}.matches(${event::class.simpleName!!}) = ${it.regex.matches(event::class.simpleName!!)}")
+            it.regex.matches(event::class.simpleName!!)
         }.forEach {
             it.session.sendSerialized(event)
         }

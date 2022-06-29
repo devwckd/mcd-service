@@ -2,6 +2,7 @@ package me.devwckd.mcd_service.proxy
 
 import kotlinx.datetime.Clock
 import me.devwckd.mcd_service.*
+import me.devwckd.mcd_service.server.Server
 import me.devwckd.mcd_service.subscriber.SubscriberManager
 import me.devwckd.mcd_service.util.PaginationInfo
 import me.devwckd.mcd_service.util.generateProxyId
@@ -21,7 +22,7 @@ class ProxyHandler(
         return servers
             .drop(page * itemsPerPage)
             .take(itemsPerPage)
-            .map { proxy -> ProxyInfo(proxy.id, proxy.ip, proxy.port) }
+            .map { proxy -> ProxyInfo(proxy.id, proxy.ip, proxy.port, proxy.currentPlayers, proxy.maxPlayers) }
             .let {
                 Paginated(page, ceil(servers.size.toDouble() / itemsPerPage).toInt(), itemsPerPage, it)
             }
@@ -30,10 +31,11 @@ class ProxyHandler(
     suspend fun create(
         createProxyRequest: CreateProxyRequest
     ): CreateProxyResponse {
-        val proxy = Proxy(newProxyId(), createProxyRequest.ip, createProxyRequest.port)
+        val proxy =
+            Proxy(newProxyId(), createProxyRequest.ip, createProxyRequest.port, 0, createProxyRequest.maxPlayers)
         proxyManager.put(proxy)
 
-        val proxyInfo = ProxyInfo(proxy.id, proxy.ip, proxy.port)
+        val proxyInfo = ProxyInfo(proxy.id, proxy.ip, proxy.port, proxy.currentPlayers, proxy.maxPlayers)
         subscriberManager.broadcast(ProxyCreatedEvent(proxyInfo))
 
         return proxyInfo
@@ -43,7 +45,26 @@ class ProxyHandler(
         id: String
     ): ReadProxyResponse {
         val proxy = proxyManager.getById(id) ?: throw ProxyNotFoundException("proxy with id $id not found.")
-        return ProxyInfo(proxy.id, proxy.ip, proxy.port)
+        return ProxyInfo(proxy.id, proxy.ip, proxy.port, proxy.currentPlayers, proxy.maxPlayers)
+    }
+
+    fun update(
+        id: String,
+        updateProxyRequest: UpdateProxyRequest
+    ): UpdateProxyResponse {
+        val proxy = proxyManager.getById(id) ?: throw ProxyNotFoundException("proxy with id $id not found.")
+
+        val (currentPlayers, maxPlayers) = updateProxyRequest
+
+        currentPlayers?.let {
+            proxy.currentPlayers = it
+        }
+
+        maxPlayers?.let {
+            proxy.maxPlayers = it
+        }
+
+        return ProxyInfo(proxy.id, proxy.ip, proxy.port, proxy.currentPlayers, proxy.maxPlayers)
     }
 
     fun heartbeat(
@@ -60,9 +81,24 @@ class ProxyHandler(
         id: String
     ) {
         val proxy = proxyManager.getById(id) ?: throw ProxyNotFoundException("proxy with id $id not found.")
-        subscriberManager.broadcast(ProxyDeletedEvent(ProxyInfo(proxy.id, proxy.ip, proxy.port)))
+        doRemove(proxy)
+    }
 
-        proxyManager.remove(id)
+    suspend fun doRemove(
+        proxy: Proxy
+    ) {
+        subscriberManager.broadcast(
+            ProxyDeletedEvent(
+                ProxyInfo(
+                    proxy.id,
+                    proxy.ip,
+                    proxy.port,
+                    proxy.currentPlayers,
+                    proxy.maxPlayers
+                )
+            )
+        )
+        proxyManager.remove(proxy.id)
     }
 
     private fun newProxyId(): String {

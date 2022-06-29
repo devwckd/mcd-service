@@ -1,7 +1,9 @@
 package me.devwckd.mcd_service.proxy
 
+import java.util.concurrent.ConcurrentHashMap
+
 class ProxyManager {
-    private val proxies = hashMapOf<String, Proxy>()
+    private val proxies = ConcurrentHashMap<String, Proxy>()
 
     fun getAll(): Collection<Proxy> {
         return proxies.values

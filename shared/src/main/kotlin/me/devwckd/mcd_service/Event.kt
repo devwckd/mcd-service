@@ -54,3 +54,18 @@ class PlayerEditedEvent(
 class PlayerDeletedEvent(
     override val playerInfo: PlayerInfo
 ) : PlayerEvent()
+
+@Serializable
+sealed class TeleportEvent : Event() {
+    abstract val transportInfo: TransportInfo
+}
+
+@Serializable
+class TransportCreatedEvent(
+    override val transportInfo: TransportInfo
+) : TeleportEvent()
+
+@Serializable
+class TransportAuthorizedEvent(
+    override val transportInfo: TransportInfo
+) : TeleportEvent()

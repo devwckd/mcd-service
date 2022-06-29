@@ -7,7 +7,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import me.devwckd.mcd_service.CreateServerRequest
 import me.devwckd.mcd_service.ServerHeartbeatRequest
-import me.devwckd.mcd_service.room.roomRoutes
+import me.devwckd.mcd_service.UpdateServerRequest
 import me.devwckd.mcd_service.util.getPaginationInfo
 import org.koin.ktor.ext.inject
 
@@ -37,6 +37,14 @@ fun Route.serverRoutes() {
                 call.respond(readServerResponse)
             }
 
+            put {
+                val id = call.parameters["id"]!!
+                val updateServerRequest = call.receive<UpdateServerRequest>()
+                val updateServerResponse = serverHandler.update(id, updateServerRequest)
+
+                call.respond(updateServerResponse)
+            }
+
             delete {
                 val id = call.parameters["id"]!!
                 serverHandler.delete(id)
@@ -51,8 +59,6 @@ fun Route.serverRoutes() {
 
                 call.respond(HttpStatusCode.OK)
             }
-
-            roomRoutes()
         }
     }
 }

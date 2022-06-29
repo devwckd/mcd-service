@@ -11,6 +11,8 @@ data class Proxy(
     val id: String,
     val ip: String,
     val port: Int,
+    var currentPlayers: Int,
+    var maxPlayers: Int,
     val proxyHealth: ProxyHealth = ProxyHealth(Instant.DISTANT_PAST),
     var webSocketServerSession: WebSocketServerSession? = null
 )

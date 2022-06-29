@@ -1,7 +1,9 @@
 package me.devwckd.mcd_service.server
 
+import java.util.concurrent.ConcurrentHashMap
+
 class ServerManager {
-    private val servers = hashMapOf<String, Server>()
+    private val servers = ConcurrentHashMap<String, Server>()
 
     fun getAll(): Collection<Server> {
         return servers.values

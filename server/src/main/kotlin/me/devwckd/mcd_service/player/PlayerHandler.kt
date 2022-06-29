@@ -20,7 +20,7 @@ class PlayerHandler(
         return servers
             .drop(page * itemsPerPage)
             .take(itemsPerPage)
-            .map { player -> PlayerInfo(player.id, player.nickname, player.proxyId, player.serverId, player.roomId) }
+            .map { player -> PlayerInfo(player.id, player.nickname, player.proxyId, player.serverId) }
             .let {
                 Paginated(page, ceil(servers.size.toDouble() / itemsPerPage).toInt(), itemsPerPage, it)
             }
@@ -30,10 +30,10 @@ class PlayerHandler(
         createPlayerRequest: CreatePlayerRequest
     ): CreatePlayerResponse {
         val player =
-            Player(createPlayerRequest.id, createPlayerRequest.nickname, createPlayerRequest.proxyId, null, null)
+            Player(createPlayerRequest.id, createPlayerRequest.nickname, createPlayerRequest.proxyId, null)
         playerManager.put(player)
 
-        val playerInfo = PlayerInfo(player.id, player.nickname, player.proxyId, null, null)
+        val playerInfo = PlayerInfo(player.id, player.nickname, player.proxyId, null)
         subscriberManager.broadcast(PlayerCreatedEvent(playerInfo))
 
         return playerInfo
@@ -43,7 +43,7 @@ class PlayerHandler(
         term: String
     ): ReadPlayerResponse {
         val player = playerManager.search(term) ?: throw PlayerNotFoundException("player with term $term not found.")
-        return PlayerInfo(player.id, player.nickname, player.proxyId, player.serverId, player.roomId)
+        return PlayerInfo(player.id, player.nickname, player.proxyId, player.serverId)
     }
 
     suspend fun update(
@@ -51,12 +51,11 @@ class PlayerHandler(
         updatePlayerRequest: UpdatePlayerRequest
     ): UpdatePlayerResponse {
         val player = playerManager.search(term) ?: throw PlayerNotFoundException("player with term $term not found.")
-        val (serverId, roomId) = updatePlayerRequest
+        val (serverId) = updatePlayerRequest
 
         if (serverId != null) player.serverId = serverId
-        if (roomId != null) player.roomId = roomId
 
-        val playerInfo = PlayerInfo(player.id, player.nickname, player.proxyId, player.serverId, player.roomId)
+        val playerInfo = PlayerInfo(player.id, player.nickname, player.proxyId, player.serverId)
         subscriberManager.broadcast(PlayerEditedEvent(playerInfo))
 
         return playerInfo
@@ -66,8 +65,8 @@ class PlayerHandler(
         term: String
     ) {
         val player = playerManager.search(term) ?: throw PlayerNotFoundException("player with term $term not found.")
-        val playerInfo = PlayerInfo(player.id, player.nickname, player.proxyId, player.serverId, player.roomId)
-        subscriberManager.broadcast(PlayerCreatedEvent(playerInfo))
+        val playerInfo = PlayerInfo(player.id, player.nickname, player.proxyId, player.serverId)
+        subscriberManager.broadcast(PlayerDeletedEvent(playerInfo))
     }
 
 }

@@ -10,6 +10,8 @@ data class Server(
     val ip: String,
     val port: Int,
     val type: String,
+    var currentPlayers: Int,
+    var maxPlayers: Int,
     val serverHealth: ServerHealth = ServerHealth(Instant.DISTANT_PAST)
 )
 

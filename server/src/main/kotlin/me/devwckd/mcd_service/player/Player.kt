@@ -7,5 +7,4 @@ data class Player(
     val nickname: String,
     val proxyId: String,
     var serverId: String?,
-    var roomId: String?
 )

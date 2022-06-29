@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import me.devwckd.mcd_service.CreateProxyRequest
 import me.devwckd.mcd_service.ProxyHeartbeatRequest
+import me.devwckd.mcd_service.UpdateProxyRequest
 import me.devwckd.mcd_service.util.getPaginationInfo
 import org.koin.ktor.ext.inject
 import java.time.Duration
@@ -44,6 +45,14 @@ fun Route.proxyRoutes() {
                 call.respond(readProxyResponse)
             }
 
+            put {
+                val id = call.parameters["id"]!!
+                val updateProxyRequest = call.receive<UpdateProxyRequest>()
+                val updateProxyResponse = proxyHandler.update(id, updateProxyRequest)
+
+                call.respond(updateProxyResponse)
+            }
+
             delete {
                 val id = call.parameters["id"]!!
                 proxyHandler.delete(id)
@@ -53,7 +62,7 @@ fun Route.proxyRoutes() {
 
             post("heartbeat") {
                 val id = call.parameters["id"]!!
-                val proxyHeartbeatRequest = call.receive<ProxyHeartbeatRequest>()
+                val proxyHeartbeatRequest: ProxyHeartbeatRequest = call.receive()
                 proxyHandler.heartbeat(id, proxyHeartbeatRequest)
 
                 call.respond(HttpStatusCode.OK)
